@@ -1,7 +1,17 @@
 clear all;
 clc;
-path_1 = '.\Sample\data\'; %the path of Sample data
-path_2 = '.\Sample\result\'; %the path to store the result
+
+if ismac || isunix
+    path_1 = './Sample/data/'; %the path of Sample data
+    path_2 = './Sample/result/'; %the path to store the result
+elseif ispc
+    path_1 = '.\Sample\data\'; %the path of Sample data
+    path_2 = '.\Sample\result\'; %the path to store the result
+else
+    disp('Platform not supported')
+end
+
+
 soma_index = 0; 
 %soma location format. 
 %0 - sequence number of soma in SWC file.
