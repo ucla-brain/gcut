@@ -1,0 +1,79 @@
+G-Cut is used for segmenting individual neurons from neuron clusters. 
+The software is written in Matlab(R2013b).
+
+System requirements: 
+Prerequisites: any system with a functional installation of Matlab
+Recommend settings: 8 core CPU, 16GB and above RAM.
+
+Third party package dependency:
+G-cut makes use of the Matlab tools for network analysis. 
+The package is downloadable at the MIT Strategic Engineering Website:
+http://strategic.mit.edu/downloads.php?page=matlab_networks
+
+Installation: 
+Download the gcut_source_code.zip, and uncompress it to desired destination.
+We will call the destination installation_path. You need to add the 
+installation_path to Matlab's search path by launching matlab, and (1) selecting
+"set path" under Home tab, and using "Add Folder" to add installation_path
+or (2) using command: addpath(installation_path) 
+The same process should be done for Matlab tools for network analysis.
+
+Usage:
+----------------------------------general--------------------------------------
+G-Cut takes as input an initial reconstruction of interconnected neuron cluster,
+and segment the cluster into individual neurons. Currently, the accepted input
+format is the swc format (see http://neuromorpho.org/myfaq.jsp. for more
+information). User should also supply location of somas, obtainable via a
+multitude of previously published methods. Multiple freely availabe softwares
+can be used to render the file, most Vaa3D (vaa3d.org) and 
+neuTube (http://www.neutracing.com/). 
+
+Please be mindful when providing soma location in xyz coordinate format
+(described below). Different software packages may set different coordinate
+origins. It is recommended that the user validate consistency of coordinate
+systems between the swc file and the soma coordinates. 
+The authors suggest producing a swc file based on soma coordinates.
+For example, if the user has two somas located at (3058.80054117, 2695.13645149,
+27.0204870506) and (3405.51372501, 1796.63882945, 17.9294695441), a valid
+swc file will look as following:
+    0 274 3058.80054117 2695.13645149 27.0204870506 13.7277325535 -1
+    1 274 3405.51372501 1796.63882945 17.9294695441 36.6107227682 -1
+The swc files for the neuron cluster and the somas can then be rended with one
+of the softwares mentioned above to ascertain coordinate system consistency.
+
+-----------------------------------demo----------------------------------------
+A sample swc file is provided in gcut_source_code/Sample/data.
+Running the script demo.m (located in gcut_source_code folder) will generate
+segmented neurons from the sample swc file, stored as swc files at 
+gcut_source_code/Sample/result.
+
+-----------------------------------API-----------------------------------------
+To run G-Cut on your own data, use the script 
+gcut_source_code/G-Cut/Neuron_split_sparse_beta.m.
+If your machine has a minimum of 8 cores avaiable, you can use 
+gcut_source_code/G-Cut/Neuron_solit_spare_sever_version.m, 
+which runs the algorithm in parallel mode.
+
+Both scripts takes three arguments.
+[] = Neuron_split_spare_sever_version()(path_1, path_2, soma_option) 
+% path_1: input data folder. must contain neuron cluster in swc format, and 
+%         corresponding text file with soma information. The swc file and text
+%         file should be named [cluster_name].swc and [cluster_name]_soma_ind.txt
+%         respectively. Multiple neuron clusters can exist in the input data
+%         folder, as long as their corresponding soma information files are
+%         present 
+% path_2: output folder. SWC file for segemented individual neurons are stored
+%         in this folder as [cluster_name]_[number].swc, where number ranges 
+%         between 1 and total number of neurons in the cluster
+% soma_option - input soma information file type:
+% 0 - soma_index: The node number of somas in SWC file
+%                 if node 5 and 23 are somas, the file should be written as:
+%                 5
+%                 23
+% 1 - soma_location: The x,y,z locations of somas
+%                    if node 5 has coordinates (1, 2, 3) and node 23 has 
+%                    coordinates (4, 5, 6), the file should be written as:
+%                    1 2 3
+%                    4 5 6
+% Note that if multiple neural clusters and their soma information files 
+% are present under path_1, they will all be processed.
