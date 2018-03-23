@@ -39,10 +39,10 @@ Additional parameter can be parsed to G-Cut for more fine tuned behavior,
 please see below.
 
 -----------------------------------demo----------------------------------------
-A sample swc file is provided in gcut_source_code/demo_data.
-Running the script gcut_demo.m (located in gcut_source_code folder) will generate
+A sample swc file is provided in gcut_source_code/Sample/data.
+Running the script demo.m (located in gcut_source_code folder) will generate
 segmented neurons from the sample swc file, stored as swc files at 
-gcut_source_code/demo_result.
+gcut_source_code/Sample/result.
 
 -----------------------------------API-----------------------------------------
 To run G-Cut on your own data, use the script 
@@ -87,8 +87,8 @@ soma_option - input soma information file type:
 distribution_option: 
      G-Cut replies on the statistical distribution of neuron morphological
      features to perform neuron segmentation. We derived such distributions
-     for multiple brain regions, animal species and cell types, based on over 
-     70,000 existing neuron reconstructions. Users can either enter a string 
+     for multiple brain regions and animal species, based on over 70,000 
+     existing neuron reconstructions. Users can either enter a string 
      indicating a pre-computed distribution (Please see 'GOF_list.xlsx' 
      for details. As an example, 'b7' indicates neocortex specific 
      distribution). Some users may be interested in brain regions specific
@@ -97,14 +97,14 @@ distribution_option:
      55, change "poly_para_set = importdata('GOF_default.mat')" to
      poly_para_set = importdata('GOF_mouse_default.mat'). Please refer to
      'GOF_mouse_list.xlsx' for details.
-     Additionally, users can provide a set of reconstructed neurons 
+     
+     '0' - Additionally, users can provide a set of reconstructed neurons 
      in .swc. The special distribution_option '0' indicates customized GOF
-     distribution. See below.
-
-distribution_neurons_dir:   
-     When '0' is the distribution_option, swc files in the directory 
-     distribution_neurons_dir will be used to compute a custome GOF 
-     distribution. For any precomputed distributions, please enter ''. 
+     distribution. 
+     format to compute a custom GOF distribution. To do so, customized data for computing GOF distribution: This option allows
+     user to provide their own dataset for computing GOF distribution 
+     parameters of specific brain region or species, the path of 
+     customized data folder must be provided in the parameter 'poly_path'.
 
  param_short_leaf_pruning: 
     Noisy image stacks often result in strong presence of overly short
@@ -119,7 +119,7 @@ distribution_neurons_dir:
     neurites. We observe such neurites often exhibit GOF values unlikely
     in natually occuring neurons. This function use a threshold of GOF to 
     prun such erroneous neurites. The input paramenter range from
-    0 ~ pi (in radians). If no GOF pruning is wanted, please enter [].
+    0 ~ pi (in radians). If no GOF pruning is wanted, please enter []
 
 param_recon_dist: 
     This parameter is a place holder for a function under construction. 
