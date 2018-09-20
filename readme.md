@@ -12,6 +12,11 @@ installation_path to Matlab's search path by launching matlab, and (1) selecting
 "set path" under Home tab, and using "Add Folder" to add installation_path
 or (2) using command: addpath(installation_path) 
 
+Third party dependencies:
+Please download Matlab Tools for Network Analysis at
+http://strategic.mit.edu/downloads.php?page=matlab_networks, and add the
+routines to Matlab search path.
+
 Usage:
 ----------------------------------general--------------------------------------
 G-Cut takes as input an initial reconstruction of interconnected neuron cluster,
@@ -39,10 +44,10 @@ Additional parameter can be parsed to G-Cut for more fine tuned behavior,
 please see below.
 
 -----------------------------------demo----------------------------------------
-A sample swc file is provided in gcut_source_code/demo_data.
-Running the script gcut_demo.m (located in gcut_source_code folder) will generate
+A few sample swc files are provided in installation_path/demo_data.
+Running the script gcut_demo.m (located in installation_path folder) will generate
 segmented neurons from the sample swc file, stored as swc files at 
-gcut_source_code/demo_result.
+installation_path/demo_result.
 
 -----------------------------------API-----------------------------------------
 To run G-Cut on your own data, use the script 
@@ -88,7 +93,7 @@ distribution_option:
      G-Cut replies on the statistical distribution of neuron morphological
      features to perform neuron segmentation. We derived such distributions
      for multiple brain regions, animal species and cell types, based on over 
-     70,000 existing neuron reconstructions. Users can either enter a string 
+     70,000 existing neuron reconstructions. Users can enter a string 
      indicating a pre-computed distribution (Please see 'GOF_list.xlsx' 
      for details. As an example, 'b7' indicates neocortex specific 
      distribution). Some users may be interested in brain regions specific
