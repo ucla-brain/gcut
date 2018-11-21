@@ -21,6 +21,21 @@ con_ind_2 = [n_row, ones(length(n_row), 1).*node_2];
 
 con_neu_ind = [con_ind_1; con_ind_2];
 
+% for i = 1:1:length(neurite_matrix(:,1))
+%     
+%     neurite_1 = neurite_matrix(i,:);
+%     
+%     con_node = intersect(neurite_1, neurite);
+%     
+%     if ~isempty(con_node) && length(con_node) == 1
+%         
+%         ind = [i, con_node];
+%         
+%         con_neu_ind = [con_neu_ind ; ind];
+%         
+%     end
+%     
+% end
 
 end
 

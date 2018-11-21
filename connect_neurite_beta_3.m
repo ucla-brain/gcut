@@ -1,4 +1,4 @@
-function [Neuron, re_Neuron ] = connect_neurite_beta_3(raw_matrix, neurite_matrix, Set_index, node_num, poly_para)
+function [Neuron, re_Neuron ] = connect_neurite_beta_3(raw_matrix, neurite_matrix, Set_index, poly_para)
 
 [raw_i raw_j] = size(raw_matrix);
 
@@ -63,31 +63,24 @@ for or_i = 1:1:m1
     
     for or_j = 1:1:length(Neuron{or_i}(:,1))
         
-        orin_so_1 = find_vector_beta(neurite_matrix,Neuron{or_i}(or_j,:));
+        orin_so_1 = find_vector_beta_1(neurite_matrix,Neuron{or_i}(or_j,:));
         
         if isempty(orin_so_1) || length(orin_so_1) > 1
-            aaaaa = 1;
+            error('Original branch is not unique!');
         end
         
-        orin_soma_node{or_i}(or_j) = find_vector_beta(neurite_matrix,Neuron{or_i}(or_j,:));
+        orin_soma_node{or_i}(or_j) = find_vector_beta_1(neurite_matrix,Neuron{or_i}(or_j,:));
         
     end
     
 end
 
-neurite_index = zeros(m, m1); %new!
-
-neu_thick = 0;
+neurite_index = zeros(m, m1); 
 
 for so_i = 1:1:m1
     sub_neuron = Neuron{so_i};
     sub_sort_nerite_ma = sort_neurite_ma;
-    [sub_fitness_ma, sub_neuron, sub_con_ma, sub_soma_connect, in_neurite_ind, pre_ma] = fitness_dijkstra_fast(neurite_matrix, location_matrix, branch_ma, sub_neuron, orin_soma_node{so_i}, sub_sort_nerite_ma, soma_set, so_i, node_weight, poly_para, neu_thick);
-    aa = sub_con_ma;
-    aa(aa~=0) = 1;
-    if ~issimple(aa)
-        aaa = 1;
-    end
+    [sub_fitness_ma, sub_neuron, sub_con_ma, sub_soma_connect, in_neurite_ind, pre_ma] = fitness_dijkstra_fast(neurite_matrix, location_matrix, branch_ma, sub_neuron, orin_soma_node{so_i}, sub_sort_nerite_ma, soma_set, so_i, node_weight, poly_para);
     Neu_con_ma{so_i} = sub_con_ma;
     Neuron{so_i} = sub_neuron;
     fitness_ma(:, so_i) = sub_fitness_ma;
@@ -98,10 +91,9 @@ for so_i = 1:1:m1
 end
     
 disp('connection graph construction complete!');
-toc;
 
-[Neuron, neurite_index] = path_extract_beta_1(Neu_con_ma, Neuron, neurite_matrix, soma_set, soma_connect, orin_soma_node, node_weight, neurite_index, previous_ma, fitness_ma); 
+[Neuron, neurite_index] = path_extract_beta_1(Neu_con_ma, Neuron, neurite_matrix, soma_set, soma_connect, orin_soma_node, neurite_index, previous_ma, fitness_ma); 
 
 disp('path assign complete!');
-toc;
+
 [re_Neuron] = neurite_toporecon_ver_1(Neuron,  Neu_con_ma, previous_ma, orin_soma_node, soma_set, raw_matrix, neurite_matrix, neurite_index);

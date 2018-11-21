@@ -1,5 +1,6 @@
 function [ recon_Neuron ] = neurite_toporecon_ver_1( Neuron,  connect_cell, previous_cell, orin_node, soma_set, raw_matrix, neurite_matrix, neurite_index_ma)
-%UNTITLED Summary of this function goes here
+%This function is used to reconstruct branches and a given soma into a
+%neuron
 %   Detailed explanation goes here
 recon_Neuron = cell(size(Neuron));
 for i = 1:1:length(Neuron)

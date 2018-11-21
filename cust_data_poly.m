@@ -32,9 +32,14 @@ function [ poly_parameter ] = cust_data_poly( poly_path )
         waitbar(fi_i/length(filelist), hwait, strcat('Processing ', ...
             num2str(fix(fi_i/length(filelist)*100)), '%') );%ÏÔÊ¾½ø¶È
             
-
+        %p_i = fix(fi_i/length(filelist) *100);
+       
+            
+        %fprintf(fs{1+(p_i>9)},p_i)
+        
     end
     
+    %fprintf('\n');
     close(hwait);
     whole_GOF_ma(:, whole_GOF_ma(3,:) == 1) = [];
     

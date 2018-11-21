@@ -1,5 +1,7 @@
-function [ fitness_matrix, in_neuron, connect_ma, soma_connect, in_neurite_ind, previous_matrix ] = fitness_dijkstra_fast( neurite_matrix, location_matrix, branch_ma, in_neuron, graph_soma_node, soma_neurite, soma_set, soma_ind, neurite_weight, poly_para, neu_thick )
-%UNTITLED3 Summary of this function goes here
+function [ fitness_matrix, in_neuron, connect_ma, soma_connect, in_neurite_ind, previous_matrix ] = fitness_dijkstra_fast( neurite_matrix, location_matrix, branch_ma, in_neuron, graph_soma_node, soma_neurite, soma_set, soma_ind, neurite_weight, poly_para )
+%   This function used dijkstra algorithm to search all branches in the
+%   connecting graph, break the graph into directed acyclic graph, 
+%   and caculate fitness for each branch-soma pair.
 %   Detailed explanation goes here
 soma_connect = zeros(length(soma_set), length(soma_set));
 n = length(neurite_matrix(:, 1));
@@ -31,7 +33,8 @@ while not(isempty(flag))
         T = setdiff(T,T(ind));
     else
         for ii = 1:1:length(j(:,1))
-            con_node = j(ii, 2);
+            con_node = j(ii, 2);  
+            
             con_neu_ind = j(ii, 1);
             if soma_neurite(con_neu_ind) ~=0 && soma_neurite(con_neu_ind) ~= soma_ind;
                   fitness_matrix(con_neu_ind) = inf;
@@ -47,13 +50,16 @@ while not(isempty(flag))
                     re_node_2 = rest_node(neurite_ind, ind_2);
                     con_ind = node_index(re_node_1) | node_index(re_node_2);
                     if con_ind ~= 0
-                        branch_order = branch_ma(T(ind)) + 1; %branch_order is the difference
+                        branch_order = branch_ma(T(ind)) + 1; 
                         total_an = 0;
                         if ind_1 == 1
                             for ind_j = m_1 - 1: -1: 1
                                 neu_ve = location_matrix(neurite_1(ind_j + 1), 2:4) - location_matrix(neurite_1(ind_j), 2:4);
                                 std_ve = location_matrix(neurite_1(ind_j), 2:4) - location_matrix(soma, 2:4);
                                 com_an = acos(sum(neu_ve .* std_ve)/(sqrt(sum(neu_ve.^2))*sqrt(sum(std_ve.^2))));
+                                if ~isreal(com_an)
+                                    com_an = real(com_an);
+                                end
                                 if isnan(com_an)
                                     com_an = pi;
                                 end
@@ -64,6 +70,9 @@ while not(isempty(flag))
                                 neu_ve = location_matrix(neurite_1(ind_j), 2:4) - location_matrix(neurite_1(ind_j +1), 2:4);
                                 std_ve = location_matrix(neurite_1(ind_j + 1), 2:4) - location_matrix(soma, 2:4);
                                 com_an = acos(sum(neu_ve .* std_ve)/(sqrt(sum(neu_ve.^2))*sqrt(sum(std_ve.^2))));
+                                if ~isreal(com_an)
+                                    com_an = real(com_an);
+                                end
                                 if isnan(com_an)
                                     com_an = pi;
                                 end
@@ -77,38 +86,25 @@ while not(isempty(flag))
                               disp(strcat(num2str(av_an),',',num2str(branch_order)));
                         end
                         adj_fit = 1/(fitness_matrix(con_neu_ind)); %fitness based penaty
-                        %adj_fit = abs(fitness_matrix(con_neu_ind) - fitness_matrix(T(ind)))/(fitness_matrix(con_neu_ind) + fitness_matrix(T(ind)));
-                        if T(ind) == 1570
-                            aaaa = 1;
-                        end
                         if d(con_neu_ind)>d(T(ind))+adj_fit
                             d(con_neu_ind)=d(T(ind))+adj_fit;
                             if pre_ma(con_neu_ind, 2) ==0
                                 pre_ma(con_neu_ind, 2) = T(ind);
-                                if neu_thick == 0
-                                    pre_ma(con_neu_ind, 3) = (1/adj_fit);
-                                else 
-                                    pre_ma(con_neu_ind, 3) = (1/adj_fit)*2*(1+(neurite_weight(T(ind),2)-neurite_weight(con_neu_ind,2))...
-                                    /(neurite_weight(T(ind),2)+neurite_weight(con_neu_ind,2)));   %This euqation combine neurite thickness to compute fitness
-                                end
+                                pre_ma(con_neu_ind, 3) = (1/adj_fit);%*2*(1+(neurite_weight(T(ind),2)-neurite_weight(con_neu_ind,2))...
+                               %/(neurite_weight(T(ind),2)+neurite_weight(con_neu_ind,2)));
+                               % use branch length as weight
                                 pre_ma(con_neu_ind, 4) = con_node;
                                 node_index(con_node) = 1;
-                                %connect_ma(T(ind), T(j)) = 1/adj_fit;
                                 branch_ma(con_neu_ind) = branch_ma(T(ind)) + 1;
                                 in_neuron = [in_neuron; neurite_matrix(con_neu_ind, :)];
-                                flag = 0;
                             else
                                 pre_ma(con_neu_ind, 2) = T(ind);
-                                if neu_thick == 0
-                                    pre_ma(con_neu_ind, 3) = (1/adj_fit);
-                                else
-                                    pre_ma(con_neu_ind, 3) = (1/adj_fit)*2*(1+(neurite_weight(T(ind),2)-neurite_weight(con_neu_ind,2))...
-                                    /(neurite_weight(T(ind),2)+neurite_weight(con_neu_ind,2))); %This euqation combine neurite thickness to compute fitness
-                                end
+                                pre_ma(con_neu_ind, 3) = (1/adj_fit);%*2*(1+(neurite_weight(T(ind),2)-neurite_weight(con_neu_ind,2))...
+                               %/(neurite_weight(T(ind),2)+neurite_weight(con_neu_ind,2)));
+                               % use branch length as weight
                                 pre_ma(con_neu_ind, 4) = con_node;
                                 node_index(con_node) = 1;
                                 branch_ma(con_neu_ind) = branch_ma(T(ind)) + 1;
-                                flag = 0;
                             end
                         end
                     end
@@ -127,7 +123,6 @@ in_neurite_ind(graph_soma_node) = 1;
 for c_i = 1:1:n
     if pre_ma(c_i, 2) ~=0
         connect_ma(pre_ma(c_i, 2), pre_ma(c_i, 1)) = pre_ma(c_i, 3);
-        
         in_neurite_ind(pre_ma(c_i, 1)) = 1;
         in_neurite_ind(pre_ma(c_i, 2)) = 1;
     end

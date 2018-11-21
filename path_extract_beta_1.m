@@ -1,4 +1,4 @@
-function [Neuron neurite_index] = path_extract_beta_1(Neu_con_ma, Neuron, neurite_matrix, soma_set, soma_connect, orin_soma_node, node_weight, neurite_index, previous_ma, fitness_ma)
+function [Neuron neurite_index] = path_extract_beta_1(Neu_con_ma, Neuron, neurite_matrix, soma_set, soma_connect, orin_soma_node, neurite_index, previous_ma, fitness_ma)
 %This function is used to find the common path between somas and use the
 %topological constraints to find the neurite assignment for each soma.
 [neu_in_r neu_in_c] = size(neurite_index);
@@ -25,7 +25,6 @@ end
 [m n] = size(soma_set);
 soma_connect = soma_connect - eye(m);
 logic_Neu_con_ma = Neu_con_ma;
-%com_pa_con = Neu_con_ma; %use undirected graph to find common path
 [m2 n2] = size(Neu_con_ma);
 for i = 1:1:n2
     logic_Neu_con_ma{i}(logic_Neu_con_ma{i}>0) = 1; 
@@ -53,13 +52,14 @@ for i = 1:1:p_n
         Neuron_in{ce_i} =  Neuron{soma_con_ind(ce_i)};
         logic_con_ma_cell{ce_i} = logic_Neu_con_ma{soma_con_ind(ce_i)};
     end
-    [Neuron_in, in_fitness_ma, in_connect_ind, Neuron_de_ma] = neurite_route_sort_gamma_2(neurite_matrix, previous_ma, Neuron_in, fitness_ma, soma_con_num, soma_con_ind, in_path_node, node_weight, Neuron_de_ma );
+    [in_fitness_ma, in_connect_ind, Neuron_de_ma] = neurite_route_sort_gamma_2(neurite_matrix, previous_ma, Neuron_in, fitness_ma, soma_con_num, soma_con_ind, in_path_node, Neuron_de_ma );
     %defint the structure to store the processed common path information
     path_struct.fitness = in_fitness_ma;
     path_struct.connect_ind = in_connect_ind;
     path_struct.path_node = in_path_node;
     path_struct.connect_soma = soma_con_ind;
     path_struct.connect_soma_num = length(soma_con_ind);
+%    path_struct.path_child_cell = in_path_child_cell;
     path_assin_struct_cell{i} = path_struct;
     disp(num2str(i));
 end
@@ -77,7 +77,7 @@ for i = 1:1:p_n %Use linear programming with topological constraints to determin
     for ii = 1:1:m 
         assign_node = (max_I==ii);
         recon_node = path_node(assign_node);
-        neurite_index(recon_node, neuron_id(ii)) = 1; %-------------------------------
+        neurite_index(recon_node, neuron_id(ii)) = 1; 
         [new_Neuron ] = path_reconnect_beta(recon_node, Neuron{neuron_id(ii)}, neurite_matrix);
         Neuron{neuron_id(ii)} = new_Neuron; 
     end

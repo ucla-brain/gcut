@@ -5,8 +5,7 @@ function [fitness] = Gassi_com_fit_beta(angle, order, poly_para)
 p = poly_para.p;
 
 mu = poly_para.mu;
-%mean = 1.13;
-%std = 0.69
+
 fun = @(x)polyval(p, x, [], mu);
 
 cdf_sum = integral(fun, 0, pi);

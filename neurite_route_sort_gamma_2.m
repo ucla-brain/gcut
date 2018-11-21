@@ -1,4 +1,4 @@
-function [Neuron, fitness_matrix, connect_ind, del_neurite_ma ] = neurite_route_sort_gamma_2(Neurite_matrix, connect_ma, Neuron, total_fitness_ma, soma_con_num, soma_con_ind, path_node, node_weight, del_neurite_ma )
+function [fitness_matrix, connect_ind, del_neurite_ma ] = neurite_route_sort_gamma_2(Neurite_matrix, connect_ma, Neuron, total_fitness_ma, soma_con_num, soma_con_ind, path_node, del_neurite_ma )
 %This function is used to search all the child neurite in the common path
 %and simplify the segmentation problem.
 
@@ -15,11 +15,11 @@ for i = 1:1:m
     connect_ind_1 = connect_ma{soma_con(i)};    
     connect_ind{i} = zeros(n2, 2);
     for j = 1:1:n2
-        aa = find_vector_beta(Neuron{i},Neurite_matrix(path_node(j),:));
+        aa = find_vector_beta_1(Neuron{i},Neurite_matrix(path_node(j),:));
         if length(aa) > 1
-            aaaa = 1;
+            error('Two same branches!');
         end
-        del_ind(j) = find_vector_beta(Neuron{i},Neurite_matrix(path_node(j),:));
+        del_ind(j) = find_vector_beta_1(Neuron{i},Neurite_matrix(path_node(j),:));
         connect_ind{i}(j, :) =  connect_ind_1( connect_ind_1(:, 1) == path_node(j), 1:2);
     end
     connect_ind_2 = connect_ind{i};
@@ -30,3 +30,5 @@ for i = 1:1:m
 end
 
 end
+
+
