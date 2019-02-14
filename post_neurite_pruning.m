@@ -1,6 +1,13 @@
 function [ prun_neuron ] = post_neurite_pruning( raw_matrix, neurite_ma, branch_node, leaf_node, prun_c )
 %UNTITLED2 Summary of this function goes here
-%   Detailed explanation goes here
+%   This function is used to prun the redundant neurites according to the
+%   angle of each neurite.
+%   [ prun_neuron ] = post_neurite_pruning( raw_matrix, neurite_ma, branch_node, leaf_node, prun_c )
+%   raw_matrix: digitally reconstructed neuron 
+%   neurite_ma: neurite matrix
+%   branch_node: branch node
+%   leaf_node: leaf node
+%   prun_c: threshold angle, range from 0~pi.
 
     topo_node = union(branch_node, leaf_node);
     topo_ma = zeros(length(topo_node), 4);
@@ -9,7 +16,7 @@ function [ prun_neuron ] = post_neurite_pruning( raw_matrix, neurite_ma, branch_
     topo_con_ma = [];
     child_list_cell = cell(length(topo_node), 1);
     topo_con_cell = {};
-    for i = 1:1:length(neurite_ma(:, 1))
+    for i = 1:1:length(neurite_ma(:, 1)) %caculate the angle of each branch
          neu_1 = neurite_ma(i, :);
          neu_1(neu_1 == 0) = [];
          total_an = 0;
@@ -29,11 +36,6 @@ function [ prun_neuron ] = post_neurite_pruning( raw_matrix, neurite_ma, branch_
          end
          topo_ma(ind, 2) = length(neu_1) - 1;
          topo_ma(ind, 3) = av_an;
-         %child_list_cell{ind} = neu_1(1:end-1);
-         
-         %ind_1 = find(topo_ma(:, 1) == neu_1(end));
-         %ind_2 = find(topo_ma(:, 1) == neu_1(1));
-         
          topo_con_ma = [topo_con_ma ; [neu_1(end), neu_1(1)]];
          topo_con_cell = [topo_con_cell; {neu_1(1:end - 1)}];
     end
@@ -41,8 +43,7 @@ function [ prun_neuron ] = post_neurite_pruning( raw_matrix, neurite_ma, branch_
     topo_ma(ind_1, 4) = topo_ma(ind_1, 3);
     %--------------------------------------------
     node_1 = leaf_node;
-    while(~isempty(find(topo_ma(:, 4) == inf)))
-        %ind = find(ismember(topo_ma(:, 1), node_1) == 1);
+    while(~isempty(find(topo_ma(:, 4) == inf))) %caculate the angle of each branch according to its children.
         ind_1 = ismember(topo_con_ma(:, 2), node_1);
         par_node = topo_con_ma(ind_1, 1);
         par_node = union(par_node, par_node);
@@ -67,7 +68,7 @@ function [ prun_neuron ] = post_neurite_pruning( raw_matrix, neurite_ma, branch_
     prun_ind = find(topo_ma(1:end, 4) > prun_c);
     prun_ind(prun_ind == 1) = [];
     prun_node = [];
-    for i = 1:1:length(prun_ind)
+    for i = 1:1:length(prun_ind)  %reconstruct the neuron
         node_2 = topo_node(prun_ind(i));
         if isempty(child_list_cell{prun_ind(i)}) && ~isempty(find(leaf_node == node_2))
             leaf_neurite = neurite_ma(find(neurite_ma(:, 1) == node_2), :);

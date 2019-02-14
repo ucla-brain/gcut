@@ -1,4 +1,4 @@
-function [] = Neuron_split_sparse_graph_beta(path_1, path_2, ext, soma_option, poly_option, poly_path, pre_prun_c, post_prun_c, recon_dist)
+function [] = Neuron_split_sparse_graph_beta(path_1, path_2, ext, soma_option, poly_option, poly_path)
 
 % This script will run the neuron segmentation algorithm.
 % [] = Neuron_split_spare_beta(path_1, path_2, soma_option) 
@@ -27,7 +27,7 @@ function [] = Neuron_split_sparse_graph_beta(path_1, path_2, ext, soma_option, p
 %                    1 2 3
 %                    4 5 6
 % poly_option: Choose a set of GOF distribution polyfit parameters to compute the
-%   fitness. The project provides serious of default GOF parameters in some brain 
+%   fitness. The project provides series of default GOF parameters in some brain 
 %   region or speicies (please see 'GOF_list.xlsx' for the poly_option of default 
 %   GOF parameters). Users can provide their own data for customized GOF parameters.
 %   poly_option needs to be a string.
@@ -37,14 +37,12 @@ function [] = Neuron_split_sparse_graph_beta(path_1, path_2, ext, soma_option, p
 %       parameters of specific brain region or species, the path of 
 %       customized data folder must be provided in the parameter 'poly_path'.
 %
-% pre_prun_c: This function is in development. Please input [];
+%Please note the post-process functions have been moved from the main fucntion of
+%G-Cut. If you want use these functions to prune the redundant branches,
+%please use the function 'soma_leaf_prune.m' and 'post_neurite_pruning.m'
+%for small branches close to soma and branches with low fitness,
+%respectively. 
 %
-% post_prun_c: This function use a threshold of GOF to prun redundant neurites
-%	whose total GOF is exeed the threshold. The input paramenter range from
-%   0~pi (e.g. 0бу~360бу). If you do not want to use this function, please
-%   input [].
-% recon_dist: This function is in development. Please input [];
-
 if poly_option <0 
     
     error('polyfit option must be a positive integral!');
@@ -138,12 +136,6 @@ for file_i = 1:1:file_n
     [in_neuron, rec_matrix] = connect_neurite_beta_3(A_1,neurite_ma, Set_index,poly_para);
     for i = 1:1:length(rec_matrix)
         neuron_1 = rec_matrix{i};
-        if ~isempty(post_prun_c)
-                [Parent_list_1, Child_list_1, branch_node_1, leaf_node_1 ] = neuron_detect(neuron_1);
-                [neurite_ma_1] = split_neurite_delta(branch_node_1,leaf_node_1,Parent_list_1, Child_list_1);
-                [neuron_1 ] = post_neurite_pruning(neuron_1, neurite_ma_1, branch_node_1, leaf_node_1, post_prun_c);
-                neuron_1 = tree_resort(neuron_1);
-        end
         save_file_std_swc(strcat(path_2, or_name, '_split_',num2str(i),'.swc'),neuron_1);
     end
     disp(strcat(num2str(file_i),'_complete!'));

@@ -36,7 +36,7 @@ while not(isempty(flag))
             con_node = j(ii, 2);  
             
             con_neu_ind = j(ii, 1);
-            if soma_neurite(con_neu_ind) ~=0 && soma_neurite(con_neu_ind) ~= soma_ind;
+            if soma_neurite(con_neu_ind) ~=0 && soma_neurite(con_neu_ind) ~= soma_ind
                   fitness_matrix(con_neu_ind) = inf;
                   soma_connect(soma_ind, soma_neurite(con_neu_ind)) = 1;
            else
@@ -90,7 +90,7 @@ while not(isempty(flag))
                             d(con_neu_ind)=d(T(ind))+adj_fit;
                             if pre_ma(con_neu_ind, 2) ==0
                                 pre_ma(con_neu_ind, 2) = T(ind);
-                                pre_ma(con_neu_ind, 3) = (1/adj_fit);%*2*(1+(neurite_weight(T(ind),2)-neurite_weight(con_neu_ind,2))...
+                                pre_ma(con_neu_ind, 3) = (1/adj_fit)*neurite_weight(con_neu_ind,2);%*2*(1+(neurite_weight(T(ind),2)-neurite_weight(con_neu_ind,2))...
                                %/(neurite_weight(T(ind),2)+neurite_weight(con_neu_ind,2)));
                                % use branch length as weight
                                 pre_ma(con_neu_ind, 4) = con_node;
@@ -99,7 +99,7 @@ while not(isempty(flag))
                                 in_neuron = [in_neuron; neurite_matrix(con_neu_ind, :)];
                             else
                                 pre_ma(con_neu_ind, 2) = T(ind);
-                                pre_ma(con_neu_ind, 3) = (1/adj_fit);%*2*(1+(neurite_weight(T(ind),2)-neurite_weight(con_neu_ind,2))...
+                                pre_ma(con_neu_ind, 3) = (1/adj_fit)*neurite_weight(con_neu_ind,2);%*2*(1+(neurite_weight(T(ind),2)-neurite_weight(con_neu_ind,2))...
                                %/(neurite_weight(T(ind),2)+neurite_weight(con_neu_ind,2)));
                                % use branch length as weight
                                 pre_ma(con_neu_ind, 4) = con_node;

@@ -1,4 +1,4 @@
-function [ Parent_list, Child_list, branch_nodes, leaf_nodes ] = neuron_detect( raw_matrix )
+function [ Parent_list, Child_list, branch_node, leaf_node ] = neuron_detect( raw_matrix )
 %UNTITLED3 Summary of this function goes here
 %   Detailed explanation goes here
     A = raw_matrix;
@@ -12,7 +12,7 @@ function [ Parent_list, Child_list, branch_nodes, leaf_nodes ] = neuron_detect( 
      Child_list((Child_list(:,1) == -1),:) = [];
     elem_A = A(:,1);
     [count_elem, node_ind] = hist(Child_list(:,1),elem_A);
-    leaf_nodes = node_ind(count_elem == 0);
-    branch_nodes = node_ind(count_elem > 1);
+    leaf_node = node_ind(count_elem == 0);
+    branch_node = node_ind(count_elem > 1);
 end
 
