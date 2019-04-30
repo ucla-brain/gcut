@@ -56,10 +56,7 @@ which runs the algorithm in parallel mode.
 Both scripts takes the same arguments:
 Neuron_split_spare_beta[server_version](input_data_dir, output_dir, 
                                         ext, soma_option, 
-                                        distribution_option, distribution_neurons_dir, 
-                                        param_short_leaf_pruning, 
-                                        param_fitness_pruning, 
-                                        param_recon_dist) 
+                                        distribution_option, distribution_neurons_dir) 
 input_data_dir: 
      input data folder. must contain neuron cluster in swc format, and 
      corresponding text file with soma information. The swc file and text
