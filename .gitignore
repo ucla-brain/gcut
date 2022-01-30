@@ -5,3 +5,5 @@ MES/*
 mit_networks/*
 TREES1.15/*
 MES.zip
+*.pyc
+test_data/

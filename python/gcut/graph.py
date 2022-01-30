@@ -1,7 +1,19 @@
+import collections
+import os
+import mmap
+import struct
+import logging
+import time
+import math
 from collections import defaultdict
+from typing import overload
 import numpy as np
 from pipeline_util import timer
 from .topology import TopologicalGraph
+
+from .fpga import fpga_context
+
+_logger = logging.getLogger().getChild(__name__)
 
 
 class BFS:
@@ -323,6 +335,8 @@ class Dijkstra:
     def dijkstra(self, src_id, target_ids, topo_graph):
         self.init(src_id, target_ids, topo_graph)
         # continue till all target nodes are visited
+
+        start = time.time()
         while not self._heap.empty():
             self.current_id = self._heap.pop().node_id
             for neighbor_id, edge_id in topo_graph.graph[self.current_id].out_neurites.items():
@@ -340,6 +354,57 @@ class Dijkstra:
                     self.nodes[neighbor_id].n_edges = self.nodes[self.current_id].n_edges + 1
                 self._heap.update(self.nodes[neighbor_id])
             self._assigned.add(self.current_id)
+        end = time.time()
+        _logger.info('CPU time: %fs', end - start)
+
+
+        shard_count, interval_count = fpga_context.shard_count, fpga_context.interval_count
+
+        start = time.time()
+        nid2vid = {}
+        edges = [collections.defaultdict(dict) for _ in range(shard_count)]
+        for current_id in topo_graph.graph:
+            for neighbor_id, edge_id in topo_graph.graph[current_id].out_neurites.items():
+                if src_id not in topo_graph.neurites[edge_id]._gof_probability:
+                    continue
+                # second argument neighbor_order is actually unused in gof_cost
+                edge_cost = topo_graph.neurites[edge_id].gof_cost(src_id)
+                src = nid2vid.setdefault(current_id, len(nid2vid))
+                dst = nid2vid.setdefault(neighbor_id, len(nid2vid))
+                edges[src % shard_count][src][dst] = min(edges[src % shard_count][src].get(dst, float('inf')), edge_cost)
+                src, dst = dst, src
+                edges[src % shard_count][src][dst] = min(edges[src % shard_count][src].get(dst, float('inf')), edge_cost)
+        vid2nid = {vid: nid for nid, vid in nid2vid.items()}
+        node_count = ((len(nid2vid) - 1) // interval_count + 1) * interval_count
+        root = nid2vid[src_id]
+        root_offset = -1
+        root_degree = 0
+        edge_count = 0
+        for sid, shard in enumerate(edges):
+            offset = 0
+            for src, dsts in shard.items():
+                edge_count += len(dsts)
+                if src == root:
+                    fpga_context.vertices[src % interval_count][src // interval_count] = root, root, offset, len(dsts)
+                    root_offset, root_degree = offset, len(dsts)
+                else:
+                    fpga_context.vertices[src % interval_count][src // interval_count] = -1, float('inf'), offset, len(dsts)
+                for dst, weight in dsts.items():
+                    fpga_context.edges[sid][offset] = dst, weight
+                    offset += 1
+            fpga_context.edges[sid][:offset].sync_to_device()
+        fpga_context.call(node_count, root, root_offset, root_degree)
+        for current_id in self.nodes:
+            vid = nid2vid[current_id]
+            vertex = fpga_context.vertices[vid % interval_count][vid // interval_count]
+            # among the 4 attribute set (d, u, parent_id, n_edges), only parent_id is read from future code
+            if self.nodes[current_id].parent_id != vid2nid[vertex[0]]:
+                _logger.error('%d != %d', self.nodes[current_id].parent_id, vid2nid[vertex[0]])
+        end = time.time()
+        _logger.info('FPGA time: %fs', end - start)
+        _logger.info('#node: %d', node_count)
+        _logger.info('#edge: %d', edge_count)
+
 
     def construct_shortest_paths(self):
         for target_id, target_node in self.nodes.items():
@@ -351,7 +416,9 @@ class Dijkstra:
 
     def shortest_paths(self):
         if len(self._shortest_paths) == 0:
+            _logger.debug('constructing shortest paths')
             self.construct_shortest_paths()
+            _logger.debug('constructed shortest pahts')
         return self._shortest_paths
 
     # the set of (child_neurite, parent_neurite) pair constructed
@@ -359,7 +426,7 @@ class Dijkstra:
     # consumes 3 topological nodes
     # if neurite_subset is not None, only include neurites from the set
     def neurite_lineages(self, ramps, neurite_subset=None):
-        neurite_pair_orderings = set()
+        neurite_pair_orderings = []
         for target_id, target_src_path in self.shortest_paths().items():
             # do nothing for paths with less than 3 nodes.
             # these include path from source node to itself, or path
@@ -367,11 +434,11 @@ class Dijkstra:
             if len(target_src_path) < 3:
                 assert target_src_path[-1] == self.source_id
                 continue
-            for i in range(len(target_src_path) - 2):
-                neurite0 = TopologicalGraph.undirected_hash(target_src_path[i], target_src_path[i + 1])
-                neurite1 = TopologicalGraph.undirected_hash(target_src_path[i + 1], target_src_path[i + 2])
+            for a, b, c in zip(target_src_path, target_src_path[1:], target_src_path[2:]):
+                neurite0 = TopologicalGraph.undirected_hash(a, b)
+                neurite1 = TopologicalGraph.undirected_hash(b, c)
                 if neurite_subset is None:
-                    neurite_pair_orderings.add((neurite0, neurite1))
+                    neurite_pair_orderings.append((neurite0, neurite1))
                 else:
                     in_set = int(neurite0 in neurite_subset) + int(neurite1 in neurite_subset)
                     in_ramp = int(neurite0 in ramps) + int(neurite1 in ramps)
@@ -380,8 +447,8 @@ class Dijkstra:
                     # only add ordering information if both neurites are in
                     # decision set
                     if in_set == 2:
-                        neurite_pair_orderings.add((neurite0, neurite1))
-        return neurite_pair_orderings
+                        neurite_pair_orderings.append((neurite0, neurite1))
+        return set(neurite_pair_orderings)
 
     # cost of neurite (child, parent) is edge cost from parent to child
     def neurite_costs(self):
@@ -405,4 +472,3 @@ class Dijkstra:
                 if off_freeway_neurite != ramp_neurite:
                     decision_edge_costs.pop(off_freeway_neurite)
         return decision_edge_costs
-

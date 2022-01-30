@@ -5,7 +5,7 @@ from pipeline_util import timer
 
 class LPSolver:
     def __init__(self):
-        self.solver = pywraplp.Solver('GCut',  pywraplp.Solver.GLOP_LINEAR_PROGRAMMING)
+        self.solver = pywraplp.Solver.CreateSolver('GUROBI')
         # careful to always prepopulate variabes as self.variables = [[]] * n
         # the c++ call to NumVar returns a pointer to the variable
         # if list.append() call or other calls that copies the added object

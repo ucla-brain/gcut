@@ -3,6 +3,7 @@ from functools import wraps
 
 
 def timer(func):
+    return func
     @wraps(func)
     def wrapper(*args, **kargs):
         start = time.time()

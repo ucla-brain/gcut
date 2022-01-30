@@ -1,4 +1,5 @@
 import os
+import logging
 from copy import deepcopy
 from collections import defaultdict
 import numpy as np
@@ -9,6 +10,14 @@ from .topology import TopologicalGraph
 from .graph import BFS, Dijkstra
 from .linear_programming import LPSolver
 
+logging.basicConfig(
+    level=logging.INFO,
+    format=
+    '%(levelname).1s%(asctime)s.%(msecs)03d %(name)s:%(lineno)d] %(message)s',
+    datefmt='%m%d %H:%M:%S',
+)
+
+_logger = logging.getLogger().getChild(__name__)
 
 class GCut:
     def __init__(self):
@@ -164,10 +173,13 @@ class GCut:
 
         for unit_soma_id in unit_soma_ids:
             self._dijkstra.clear()
+            _logger.debug('starting dijkstra %d', len(unit_soma_ids))
             self._dijkstra.dijkstra(unit_soma_id, self._bfs.connected_topo_ids, self.topo_graph)
+            _logger.debug('dijkstra #1')
             # paris of (child undirected neurite, parent undirected neurite)
             # each neurite is in the form of DirectedNeurite.undirected_hash()
             neurite_paternity = self._dijkstra.neurite_lineages(self._bfs.ramps, neurite_subset=self._bfs.decision_neurites())
+            _logger.debug('dijkstra #2')
             # w(soma_id, neurite_id) <= w(soma_id, parent(neurite_id, soma_id))
             # this constraint is constructed from Dijkstra result
             # there are (n_decision_neurites - 1) * n_somas of such constraints
@@ -180,19 +192,22 @@ class GCut:
                 index = GCut._coefficient_id(n_somas, n_decision_neurites, row, col)
                 parent_index = GCut._coefficient_id(n_somas, n_decision_neurites, row, col_parent)
                 self.lp_solver.add_constraint([index, parent_index], [1, -1], -1, 0)
+            _logger.debug('dijkstra #3')
             # fill coefficients values with dijkstra edge cost result
             decision_neurite_costs = self._dijkstra.decision_neurite_costs(self._bfs.ramps)
+            _logger.debug('dijkstra #4')
             columns, costs = [], []
             # use the Dijkstra results to update coefficient matrix
             for neurite_hash, cost in decision_neurite_costs.items():
                 columns.append(neurite_col[neurite_hash])
                 costs.append(cost)
+            _logger.debug('dijkstra #5')
             C[[soma_row[unit_soma_id]] * n_decision_neurites, columns] = costs
+            _logger.debug('dijkstra #6')
         self.lp_solver.define_objective(C.ravel())
-        print('linear programming: n coefficients = {}, n constraints = {}'
-              .format(self.lp_solver.n_variables(),
-                      self.lp_solver.n_constraints()))
+        _logger.debug('linear programming: n coefficients = %s, n constraints = %s', self.lp_solver.n_variables(), self.lp_solver.n_constraints())
         self.lp_solver.solve()
+        _logger.debug('solved')
 
         # neurite membership to each soma in this unit
         memberships = self.lp_solver.solutions().reshape((n_somas, n_decision_neurites))
@@ -272,4 +287,3 @@ class GCut:
                                     node.x, node.y, node.z,
                                     node.radius, parent_id))
                     new_node_id += 1
-
