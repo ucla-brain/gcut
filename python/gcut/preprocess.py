@@ -2,7 +2,7 @@ import os
 from copy import deepcopy
 import numpy as np
 from scipy.spatial.distance import cdist
-from .neuron_tree import NeuronTree
+from .neuron_tree import NeuronTrees
 
 
 class HandyMan:
@@ -11,8 +11,8 @@ class HandyMan:
         assert os.path.isfile(soma_file_path)
         self.swc_path = swc_path
         self.scale_z = scale_z
-        self.tree_nodes = NeuronTree()
-        self.tree_nodes.build_tree_from_swc(self.swc_path)
+        self.tree_nodes = NeuronTrees()
+        self.tree_nodes.build_trees_from_swc(self.swc_path)
         self.soma_file_path = soma_file_path
         self.soma_ids = set()
         self.soma_xyzs = {}

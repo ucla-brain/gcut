@@ -39,17 +39,17 @@ class NeuronNode:
                     continue
                 delim = ' ' if l.find(',') < 0 else ','
                 node_id_str, node_type_str, x_str, y_str, z_str, \
-                radius_str, parent_id_str = l.strip().split(delim)
+                        radius_str, parent_id_str = l.strip().split(delim)
                 yield [int(node_id_str), int(node_type_str),
-                       float(x_str), float(y_str), float(z_str),
-                       float(radius_str), int(parent_id_str)]
+                        float(x_str), float(y_str), float(z_str),
+                        float(radius_str), int(parent_id_str)]
 
     @staticmethod
     def write_swc_file_line(f, node):
         assert isinstance(node, NeuronNode)
         f.write('{} {} {} {} {} {} {}\n'.format(node.node_id, node.node_type,
-                                                node.x, node.y, node.z,
-                                                node.radius, node.parent_id))
+            node.x, node.y, node.z,
+            node.radius, node.parent_id))
 
 
 class NeuronTree:
@@ -69,17 +69,16 @@ class NeuronTree:
         self.clear()
         # place original metaline in self.meta_lines
         self.meta_lines += '\n'.join(['# original metaline: ' +
-                                      meta_line.strip() for meta_line in
-                                      NeuronNode.read_swc_meta_lines(swc_path)])
+            meta_line.strip() for meta_line in
+            NeuronNode.read_swc_meta_lines(swc_path)])
         find_root = False
-        for node_id, node_type, x, y, z, radius, parent_id in \
-                NeuronNode.read_swc_node_lines(swc_path):
+        for node_id, node_type, x, y, z, radius, parent_id in NeuronNode.read_swc_node_lines(swc_path):
             if parent_id == NeuronTree.ROOT_PARENT_ID:
                 if find_root:
                     raise ValueError('multiple root node found in file {}, '
-                                     'use NeuronTrees class instead'.format(swc_path))
-                else:
-                    find_root = True
+                            'use NeuronTrees class instead'.format(swc_path))
+            else:
+                find_root = True
             node = NeuronNode(node_id, node_type, x, y, z, radius, parent_id)
             self.add_node(node)
         if self.empty():
@@ -167,35 +166,35 @@ class NeuronTree:
                 continue
             parent_branch_order = self.branch_orders[parent_id]
             orders[node_id] = parent_branch_order + \
-                              int(self.n_children(parent_id) > 1)
+                    int(self.n_children(parent_id) > 1)
         return orders
 
     def branch_nodes(self):
         self.find_children(rescan=False)
         return set([branch_node_id for branch_node_id in self.children
-                    if self.n_children(branch_node_id) > 1])
+            if self.n_children(branch_node_id) > 1])
 
-    def node_volume(self, node_id):
-        if node_id not in self.tree:
-            return -1
+        def node_volume(self, node_id):
+            if node_id not in self.tree:
+                return -1
         return (4 / 3) * np.pi * np.power(self.tree[node_id].radius, 3)
 
     def _node_xyz(self, node_id):
         if node_id not in self.tree:
             return None
         return np.array([self.tree[node_id].x,
-                         self.tree[node_id].y,
-                         self.tree[node_id].z])
+            self.tree[node_id].y,
+            self.tree[node_id].z])
 
-    def pair_distance(self, node_id0, node_id1):
-        if node_id0 not in self.tree or node_id1 not in self.tree:
-            return -1
+        def pair_distance(self, node_id0, node_id1):
+            if node_id0 not in self.tree or node_id1 not in self.tree:
+                return -1
         if node_id0 == node_id1:
             return 0
         return np.linalg.norm(self._node_xyz(node_id0) -
-                              self._node_xyz(node_id1), 2)
+                self._node_xyz(node_id1), 2)
 
-    # if node0 contains node1, return node_id0. otherwise return -1
+        # if node0 contains node1, return node_id0. otherwise return -1
     def pair_containment(self, node_id0, node_id1):
         if node_id0 not in self.tree or node_id1 not in self.tree:
             return -1
@@ -224,13 +223,13 @@ class NeuronTree:
         containing_node_id = self.pair_containment(node_id0, node_id1)
         if containing_node_id >= 0:
             contained_node_id = node_id0 \
-                if containing_node_id == node_id1 else node_id1
+                    if containing_node_id == node_id1 else node_id1
             return self.node_volume(contained_node_id)
 
         # http://mathworld.wolfram.com/Sphere-SphereIntersection.html
         v = np.pi * np.power(r0 + r1 - d, 2) * \
-            (np.power(d, 2) + 2 * d *(r0 + r1) -
-             3 * (np.power(r0, 2) + np.power(r1, 2)) + 6 * r0 * r1) / (12 * d)
+                (np.power(d, 2) + 2 * d *(r0 + r1) -
+                        3 * (np.power(r0, 2) + np.power(r1, 2)) + 6 * r0 * r1) / (12 * d)
         return v
 
     # total volume of two nodes. intersection is accounted
@@ -240,7 +239,7 @@ class NeuronTree:
         r0 = self.tree[node_id0].radius
         r1 = self.tree[node_id1].radius
         return (4 / 3) * np.pi * (np.power(r0, 3) + np.power(r1, 3)) - \
-               self.intersection_volume(node_id0, node_id1)
+                self.intersection_volume(node_id0, node_id1)
 
     # logs calling function's name. description if present is expeted as
     # the function's parameter dictionary string decodable by json.loads
@@ -259,8 +258,8 @@ class NeuronTree:
             caller_prefix = caller_frame_info.filename
         arg_dict = {k: str(v) for k, v in locals_dict.items() if k in arg_names}
         self._operations.append('# operation log: {}.{}: {}'
-                                .format(caller_prefix, caller_name,
-                                        json.dumps(arg_dict)))
+                .format(caller_prefix, caller_name,
+                    json.dumps(arg_dict)))
 
     def add_node(self, node):
         assert isinstance(node, NeuronNode)
@@ -359,10 +358,10 @@ class NeuronTree:
         if stable_nodes is None:
             stable_nodes = {self.root_id()}
         info = 'iteratively prune leaf ' \
-               'branches with <= {} nodes'.format(min_leaf_branch_length)
+                'branches with <= {} nodes'.format(min_leaf_branch_length)
         while self._prune_short_leaves(min_leaf_branch_length=
-                                       min_leaf_branch_length,
-                                       stable_nodes=stable_nodes):
+                min_leaf_branch_length,
+                stable_nodes=stable_nodes):
             print(info)
         self.log_operation()
 
@@ -427,7 +426,7 @@ class NeuronTree:
         sine_theta = np.sin(theta)
         if gamma == 0.0:
             rotation_m2d = np.matrix([[cosine_theta, -sine_theta],
-                                      [sine_theta, cosine_theta]])
+                [sine_theta, cosine_theta]])
             for node in self.tree.values():
                 new_xy = np.matmul(rotation_m2d, np.array([node.x, node.y]))
                 new_xy = np.squeeze(np.asarray(new_xy))
@@ -435,11 +434,11 @@ class NeuronTree:
                 node.x, node.y = newx, newy
         else:
             rotation_m3dx = np.matrix([[1, 0, 0],
-                                       [0, cosine_theta, -sine_theta],
-                                       [0, sine_theta, cosine_theta]])
+                [0, cosine_theta, -sine_theta],
+                [0, sine_theta, cosine_theta]])
             rotation_m3dz = np.matrix([[cosine_theta, -sine_theta, 0],
-                                       [sine_theta, cosine_theta, 0],
-                                       [0, 0, 1]])
+                [sine_theta, cosine_theta, 0],
+                [0, 0, 1]])
             rotation_m3d = np.matmul(rotation_m3dx, rotation_m3dz)
             rotation_m3d = np.squeeze(np.asarray(rotation_m3d))
             for node in self.tree.values():
@@ -545,15 +544,19 @@ class NeuronTrees:
         self.clear()
         root_ids = set()
         nodes = {}
-        self.meta_lines += NeuronNode.read_swc_meta_lines(swc_path)
-        for node_id, node_type, x, y, z, radius, parent_id in NeuronNode.read_swc_node_lines():
+        # self.meta_lines += NeuronNode.read_swc_meta_lines(swc_path)
+        # place original metaline in self.meta_lines
+        self.meta_lines += '\n'.join(['# original metaline: ' +
+            meta_line.strip() for meta_line in
+            NeuronNode.read_swc_meta_lines(swc_path)])
+        for node_id, node_type, x, y, z, radius, parent_id in NeuronNode.read_swc_node_lines(swc_path):
             if self._node_id_exists(node_id):
                 raise ValueError('node id {} already exists'.format(node_id))
-            if parent_id == NeuronTree.ROOT_PARENT_ID:
+            if node_type == 1:
                 root_ids.add(node_id)
             nodes[node_id] = NeuronNode(node_id, node_type, x, y, z, radius, parent_id)
         children = defaultdict(list)
-        for node in nodes:
+        for node in nodes.values():
             children[node.parent_id].append(node.node_id)
         for root_id in root_ids:
             self._build_tree_from_root(root_id, nodes, children)
@@ -564,8 +567,8 @@ class NeuronTrees:
         if clear_existing:
             self.clear()
         self.meta_lines += '# including files \n{}'\
-                           .format('\n'.join(['# {}'.format(swc_path)
-                                              for swc_path in swc_paths]))
+                .format('\n'.join(['# {}'.format(swc_path)
+                    for swc_path in swc_paths]))
         tree_list = []
         for swc_path in swc_paths:
             tree = NeuronTree()
@@ -577,7 +580,7 @@ class NeuronTrees:
             tree_root_id = tree.root_id()
             self.trees[tree_root_id] = tree
             offset += max(self.trees[tree_root_id].size(),
-                          max([node_id for node_id in self.trees[tree_root_id].tree.keys()]))
+                    max([node_id for node_id in self.trees[tree_root_id].tree.keys()]))
 
     def write_swc_file(self, output_path):
         with open(output_path, 'w') as f:
@@ -618,6 +621,15 @@ class NeuronTrees:
             child_id = root_children.pop(0)
             self.trees[root_id].add_node(nodes[child_id])
             root_children.extend(children[child_id])
+
+    def scale_coordinates(self, scale_x=1, scale_y=1, scale_z=1):
+        assert scale_x > 0 and scale_y > 0 and scale_z > 0
+        for subtree in self.trees.values():
+            current_tree = subtree.tree
+            for node_id in current_tree:
+                current_tree[node_id].x *= scale_x
+                current_tree[node_id].y *= scale_y
+                current_tree[node_id].z *= scale_z
 
 
 def test():
